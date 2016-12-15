@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		
+		<title>gyp-home</title>
+		<link rel="stylesheet" href="css/home.css" />
+		<link rel="stylesheet" href="css/trp.css" />
+		<link type="text/css" rel="Stylesheet" href="css/imageflow.css" />
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script type="text/javascript" src="js/imageflow.js"></script>
+		<script src="js/home.js"></script>
+	</head>
+	<style>
+	
+	@media screen and (min-width: 1200px) {
+		.header  .header-mid .menu{
+			display: block;
+		}
+		.header  .header-mid .myloge{
+			float: left;
+			text-align: center;
+		}
+	}	
+	@media screen and (max-width: 1200px) and (min-width:992px){
+		.header  .header-mid .menu{
+			display: block;
+		}
+		 .header.myloge{
+			float: left;
+			text-align: center;
+		}
+	}
+	@media screen and (max-width: 992px) and (min-width:768px){	
+		 .header  .header-mid .menu{
+			display: none;
+		}
+		.header  .header-mid .myloge{
+			float: none;
+			text-align: center;
+		}
+	}
+	@media screen and (max-width: 768px) {
+		.header  .header-mid .menu{
+			display: none;
+		}
+		.header  .header-mid .myloge{
+			float: none;
+			text-align: center;
+		}	
+		/*.features .feat p{
+			font-size: 8px;
+		}*/
+	}
+	canvas{cursor:crosshair;display:block;left:0;position:absolute;top:0;z-index:2000}
+</style>
+	<body>
+		<!--<script type="text/javascript" src="js/jquery-2.0.0.min.js"></script>-->
+<script type="text/javascript">
+$(function(){
+var Fireworks = function(){
+var self = this;
+var rand = function(rMi, rMa){return ~~((Math.random()*(rMa-rMi+1))+rMi);}
+var hitTest = function(x1, y1, w1, h1, x2, y2, w2, h2){return !(x1 + w1 < x2 || x2 + w2 < x1 || y1 + h1 < y2 || y2 + h2 < y1);};
+window.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(a){window.setTimeout(a,1E3/60)}}();
+self.init = function(){ 
+self.canvas = document.createElement('canvas');             
+self.canvas.width = self.cw = $(window).innerWidth();
+self.canvas.height = self.ch = $(window).innerHeight();         
+self.particles = [];    
+self.partCount = 150;
+self.fireworks = [];    
+self.mx = self.cw/2;
+self.my = self.ch/2;
+self.currentHue = 30;
+self.partSpeed = 5;
+self.partSpeedVariance = 10;
+self.partWind = 50;
+self.partFriction = 5;
+self.partGravity = 1;
+self.hueMin = 0;
+self.hueMax = 360;
+self.fworkSpeed = 4;
+self.fworkAccel = 10;
+self.hueVariance = 30;
+self.flickerDensity = 25;
+self.showShockwave = true;
+self.showTarget = false;
+self.clearAlpha = 25;
+$(document.body).append(self.canvas);
+self.ctx = self.canvas.getContext('2d');
+self.ctx.lineCap = 'round';
+self.ctx.lineJoin = 'round';
+self.lineWidth = 1;
+self.bindEvents();          
+self.canvasLoop();
+self.canvas.onselectstart = function() {
+return false;
+};
+};      
+self.createParticles = function(x,y, hue){
+var countdown = self.partCount;
+while(countdown--){
+var newParticle = {
+    x: x,
+    y: y,
+    coordLast: [
+        {x: x, y: y},
+        {x: x, y: y},
+        {x: x, y: y}
+    ],
+    angle: rand(0, 360),
+    speed: rand(((self.partSpeed - self.partSpeedVariance) <= 0) ? 1 : self.partSpeed - self.partSpeedVariance, (self.partSpeed + self.partSpeedVariance)),
+    friction: 1 - self.partFriction/100,
+    gravity: self.partGravity/2,
+    hue: rand(hue-self.hueVariance, hue+self.hueVariance),
+    brightness: rand(50, 80),
+    alpha: rand(40,100)/100,
+    decay: rand(10, 50)/1000,
+    wind: (rand(0, self.partWind) - (self.partWind/2))/25,
+    lineWidth: self.lineWidth
+};              
+self.particles.push(newParticle);
+}
+};
+self.updateParticles = function(){
+var i = self.particles.length;
+while(i--){
+var p = self.particles[i];
+var radians = p.angle * Math.PI / 180;
+var vx = Math.cos(radians) * p.speed;
+var vy = Math.sin(radians) * p.speed;
+p.speed *= p.friction;
+p.coordLast[2].x = p.coordLast[1].x;
+p.coordLast[2].y = p.coordLast[1].y;
+p.coordLast[1].x = p.coordLast[0].x;
+p.coordLast[1].y = p.coordLast[0].y;
+p.coordLast[0].x = p.x;
+p.coordLast[0].y = p.y;
+p.x += vx;
+p.y += vy;
+p.y += p.gravity;
+p.angle += p.wind;              
+p.alpha -= p.decay;
+if(!hitTest(0,0,self.cw,self.ch,p.x-p.radius, p.y-p.radius, p.radius*2, p.radius*2) || p.alpha < .05){                  
+    self.particles.splice(i, 1);    
+}
+};
+};
+self.drawParticles = function(){
+var i = self.particles.length;
+while(i--){
+var p = self.particles[i];                          
+var coordRand = (rand(1,3)-1);
+self.ctx.beginPath();                               
+self.ctx.moveTo(Math.round(p.coordLast[coordRand].x), Math.round(p.coordLast[coordRand].y));
+self.ctx.lineTo(Math.round(p.x), Math.round(p.y));
+self.ctx.closePath();               
+self.ctx.strokeStyle = 'hsla('+p.hue+', 100%, '+p.brightness+'%, '+p.alpha+')';
+self.ctx.stroke();              
+if(self.flickerDensity > 0){
+    var inverseDensity = 50 - self.flickerDensity;                  
+    if(rand(0, inverseDensity) === inverseDensity){
+        self.ctx.beginPath();
+        self.ctx.arc(Math.round(p.x), Math.round(p.y), rand(p.lineWidth,p.lineWidth+3)/2, 0, Math.PI*2, false)
+        self.ctx.closePath();
+        var randAlpha = rand(50,100)/100;
+        self.ctx.fillStyle = 'hsla('+p.hue+', 100%, '+p.brightness+'%, '+randAlpha+')';
+        self.ctx.fill();
+    }   
+}
+};
+};
+self.createFireworks = function(startX, startY, targetX, targetY){
+var newFirework = {
+x: startX,
+y: startY,
+startX: startX,
+startY: startY,
+hitX: false,
+hitY: false,
+coordLast: [
+    {x: startX, y: startY},
+    {x: startX, y: startY},
+    {x: startX, y: startY}
+],
+targetX: targetX,
+targetY: targetY,
+speed: self.fworkSpeed,
+angle: Math.atan2(targetY - startY, targetX - startX),
+shockwaveAngle: Math.atan2(targetY - startY, targetX - startX)+(90*(Math.PI/180)),
+acceleration: self.fworkAccel/100,
+hue: self.currentHue,
+brightness: rand(50, 80),
+alpha: rand(50,100)/100,
+lineWidth: self.lineWidth
+};          
+self.fireworks.push(newFirework);
+};
+self.updateFireworks = function(){
+var i = self.fireworks.length;
+while(i--){
+var f = self.fireworks[i];
+self.ctx.lineWidth = f.lineWidth;
+vx = Math.cos(f.angle) * f.speed,
+vy = Math.sin(f.angle) * f.speed;
+f.speed *= 1 + f.acceleration;              
+f.coordLast[2].x = f.coordLast[1].x;
+f.coordLast[2].y = f.coordLast[1].y;
+f.coordLast[1].x = f.coordLast[0].x;
+f.coordLast[1].y = f.coordLast[0].y;
+f.coordLast[0].x = f.x;
+f.coordLast[0].y = f.y;
+if(f.startX >= f.targetX){
+    if(f.x + vx <= f.targetX){
+        f.x = f.targetX;
+        f.hitX = true;
+    } else {
+        f.x += vx;
+    }
+} else {
+    if(f.x + vx >= f.targetX){
+        f.x = f.targetX;
+        f.hitX = true;
+    } else {
+        f.x += vx;
+    }
+}
+if(f.startY >= f.targetY){
+    if(f.y + vy <= f.targetY){
+        f.y = f.targetY;
+        f.hitY = true;
+    } else {
+        f.y += vy;
+    }
+} else {
+    if(f.y + vy >= f.targetY){
+        f.y = f.targetY;
+        f.hitY = true;
+    } else {
+        f.y += vy;
+    }
+}               
+if(f.hitX && f.hitY){
+    self.createParticles(f.targetX, f.targetY, f.hue);
+    self.fireworks.splice(i, 1);
+}
+};
+};
+self.drawFireworks = function(){
+var i = self.fireworks.length;
+self.ctx.globalCompositeOperation = 'lighter';
+while(i--){
+var f = self.fireworks[i];      
+self.ctx.lineWidth = f.lineWidth;
+var coordRand = (rand(1,3)-1);                  
+self.ctx.beginPath();                           
+self.ctx.moveTo(Math.round(f.coordLast[coordRand].x), Math.round(f.coordLast[coordRand].y));
+self.ctx.lineTo(Math.round(f.x), Math.round(f.y));
+self.ctx.closePath();
+self.ctx.strokeStyle = 'hsla('+f.hue+', 100%, '+f.brightness+'%, '+f.alpha+')';
+self.ctx.stroke();  
+if(self.showTarget){
+    self.ctx.save();
+    self.ctx.beginPath();
+    self.ctx.arc(Math.round(f.targetX), Math.round(f.targetY), rand(1,8), 0, Math.PI*2, false)
+    self.ctx.closePath();
+    self.ctx.lineWidth = 1;
+    self.ctx.stroke();
+    self.ctx.restore();
+}
+if(self.showShockwave){
+    self.ctx.save();
+    self.ctx.translate(Math.round(f.x), Math.round(f.y));
+    self.ctx.rotate(f.shockwaveAngle);
+    self.ctx.beginPath();
+    self.ctx.arc(0, 0, 1*(f.speed/5), 0, Math.PI, true);
+    self.ctx.strokeStyle = 'hsla('+f.hue+', 100%, '+f.brightness+'%, '+rand(25, 60)/100+')';
+    self.ctx.lineWidth = f.lineWidth;
+    self.ctx.stroke();
+    self.ctx.restore();
+}
+};
+};
+self.bindEvents = function(){
+$(window).on('resize', function(){          
+clearTimeout(self.timeout);
+self.timeout = setTimeout(function() {
+    self.canvas.width = self.cw = $(window).innerWidth();
+    self.canvas.height = self.ch = $(window).innerHeight();
+    self.ctx.lineCap = 'round';
+    self.ctx.lineJoin = 'round';
+}, 100);
+});
+$(self.canvas).on('mousedown', function(e){
+self.mx = e.pageX - self.canvas.offsetLeft;
+self.my = e.pageY - self.canvas.offsetTop;
+self.currentHue = rand(self.hueMin, self.hueMax);
+self.createFireworks(self.cw/2, self.ch, self.mx, self.my); 
+$(self.canvas).on('mousemove.fireworks', function(e){
+    self.mx = e.pageX - self.canvas.offsetLeft;
+    self.my = e.pageY - self.canvas.offsetTop;
+    self.currentHue = rand(self.hueMin, self.hueMax);
+    self.createFireworks(self.cw/2, self.ch, self.mx, self.my);                                 
+});             
+});
+$(self.canvas).on('mouseup', function(e){
+$(self.canvas).off('mousemove.fireworks');                                  
+});
+}
+self.clear = function(){
+self.particles = [];
+self.fireworks = [];
+self.ctx.clearRect(0, 0, self.cw, self.ch);
+};
+self.canvasLoop = function(){
+requestAnimFrame(self.canvasLoop, self.canvas);         
+self.ctx.globalCompositeOperation = 'destination-out';
+self.ctx.fillStyle = 'rgba(0,0,0,'+self.clearAlpha/100+')';
+self.ctx.fillRect(0,0,self.cw,self.ch);
+self.updateFireworks();
+self.updateParticles();
+self.drawFireworks();           
+self.drawParticles();
+};
+self.init();        
+}
+var fworks = new Fireworks();
+});
+</script>
+	<img src="img/works.jpg" alt="" class="bod" />
+		<!--header-->
+	<div class="header container">
+		<div class="header-mid container">
+			<div class="myloge col-md-6 col-lg-6 col-sm-12 col-xs-12">
+				<img src="img/name.png" alt="" class="loge" style="height:30%" />
+				<span>phone:15034164080</span>
+			</div>
+			<div class="menu col-md-6 col-lg-6 col-sm-12 col-xs-12">
+				<a href="javascript:;" class="menu-eve menu-eve1">home</a>
+				<a href="javascript:;" class="menu-eve">production</a>
+				<a  href="javascript:;" class="menu-eve">skill</a>
+				<a href="javascript:;" class="menu-eve">about</a>
+				<a  href="javascript:;" class="menu-eve">        </a>			
+			</div>
+		</div>
+	</div>
+	<!--banner-->
+	<div class="banner " title="click here" >
+		<a href="javascript:;" class="ban-imgs">
+			<img src="img/slide7.png" alt="" class="back" />
+		</a>
+		<div class="web">
+			<div class="huan">
+				<span>欢</span>
+				<span>迎</span>
+				<span>来</span>
+				<span>到</span>
+				<span>我</span>
+				<span>的</span>
+				<span>世</span>
+				<span>界</span>
+			</div>				.
+				
+			<div class="wo">
+				<span class="spans">我</span>
+				<span class="line">|</span>
+				<span class="spans1">是</span>
+				<span class="spans2">一</span>
+				<span class="spans3">名</span>
+				<span class="spans4">前</span>
+				<span class="spans5">端</span>
+				<span class="spans6">工</span>
+				<span class="spans7">程</span>
+				<span class="spans8">师</span>
+			</div>			
+			</div>
+		</div>
+		<!--FEATURES-->
+		<div class="features floor container">
+			<div class="feat container">
+				<h1 class="simple-head">
+					WELCOME !
+					<z>MY SPACE</z>
+				</h1>
+				<p>欢迎来到我的空间,挖掘一个不断前进前端工程师的脚步！一双发现美的眼睛和一双创造美的手是由我认真的工作态度和浓厚的兴趣来支撑！优秀的作品和项目是默契的团队和成员追求最好的结局的结晶！对，我就是那个有效时间内追求做到最好的前端工程师！
+				<br></br>
+				Welcome to my space air breathing, the steps of mining move forward, an engineer!
+				<div class="feat-imgs">
+					<div class="feat-left col-md-6 col-lg-6 col-sm-12 col-xs-12">
+						<img src="img/features-lcd.png" alt="" />
+					</div>
+					<ul class="feat-right col-md-6 col-lg-6 col-sm-12 col-xs-12">
+						<li class="feat-icon  col-lg-4 col-md-4 col-xs-6 col-sm-6" >
+							<div class="icon-eve">
+								<img src="img/features1.png" alt="" />								<div class="cover">
+									<h5>Interest</h5>
+									<p>Clean Styles for Artists</p>
+								</div>
+							</div>
+						</li>
+						<li class="feat-icon col-lg-4 col-md-4 col-xs-6 col-sm-6">
+							<div class="icon-eve">
+								<img src="img/features2.png" alt="" />
+								<div class="cover">
+									<h5>Self-study</h5>
+									<p>Clean Styles for Artists</p>
+								</div>
+							</div>
+						</li>
+						<li class="feat-icon col-lg-4 col-md-4 col-xs-6 col-sm-6">
+							<div class="icon-eve">
+								<img src="img/features3.png" alt="" />
+								<div class="cover">
+									<h5>Duty</h5>
+									<p>Clean Styles for Artists</p>
+								</div>
+							</div>
+						</li>
+						<li class="feat-icon col-lg-4 col-md-4 col-xs-6 col-sm-6">
+							<div class="icon-eve">
+								<img src="img/features4.png" alt="" />
+								<div class="cover">
+									<h5>Unity</h5>
+									<p>Clean Styles for Artists</p>
+								</div>
+							</div>
+						</li>
+						<li class="feat-icon col-lg-4 col-md-4 col-xs-6 col-sm-6">
+							<div class="icon-eve">
+								<img src="img/features5.png" alt="" />
+								<div class="cover">
+									<h5>Full</h5>
+									<p>Clean Styles for Artists</p>
+								</div>
+							</div>
+						</li>
+						<li class="feat-icon col-lg-4 col-md-4 col-xs-6 col-sm-6">
+							<div class="icon-eve">
+								<img src="img/features6.png" alt="" />
+								<div class="cover">
+									<h5>Artists</h5>
+									<p>Clean Styles for Artists</p>
+								</div>
+							</div>
+						</li>					
+					</ul>
+					
+				</div>
+			</div>	
+		</div>	
+		<!--PORTFOLIO STYLE-->
+		<div class="portfolio floor container">
+			<div class="pro-mid container">
+				<h1 class="pro-h">PORTFOLIO STYLE</h1>
+			</div>
+			<ul class="detail detail-cir">
+				<li class="xiaoyingyong">项目与网页</li>
+				<li class="detail-eve col-lg-4 col-md-4 col-xs-12 col-sm-6">
+					<div class="con">
+						<a href="http://gaothing.github.io/yintai" class="img">
+							<img src="img/yt.jpg" alt="" />
+							<div class="tan tan1"></div>
+							<div class="tan tan2"></div>
+							<div class="tan tan3"></div>
+							<div class="tan tan4"></div>
+							<div class="tan tan5"></div>
+							<div class="tan tan6"></div>
+							<div class="tan tan7"></div>
+							<div class="tan tan8"></div>
+						</a>
+						<div class="con-head">
+							<h1 class="con-hd-tp">
+								WEB单页面宣传网页页(购物类网站)
+							</h1>
+							<div class="con-hd-bt">
+								应用HTML，CSS，javascript对静态页面效果的实现！以前工作前的作品！
+							</div>
+						</div>
+					</div>
+					<div class="con">
+						<a href="http://gaothing.github.io/jingdong" class="img">
+							<img src="img/gm.jpg" alt="" />
+							<div class="tan tan1"></div>
+							<div class="tan tan2"></div>
+							<div class="tan tan3"></div>
+							<div class="tan tan4"></div>
+							<div class="tan tan5"></div>
+							<div class="tan tan6"></div>
+							<div class="tan tan7"></div>
+							<div class="tan tan8"></div>
+						</a>
+						<div class="con-head">
+							<h1 class="con-hd-tp">
+								WEB单页面宣传网页页(电商类网站)
+							</h1>
+							<div class="con-hd-bt">
+								应用HTML，CSS，javascript对静态页面效果的实现！以前工作前的作品！
+							</div>
+						</div>
+					</div>
+				</li> 
+				<li class="detail-eve col-lg-4 col-md-4 col-xs-12 col-sm-6">
+					<div class="con">
+						<a href="http://nanshan4080.duapp.com" class="img">
+							<img src="img/nan.jpg" alt="" />
+							<div class="tan tan1"></div>
+							<div class="tan tan2"></div>
+							<div class="tan tan3"></div>
+							<div class="tan tan4"></div>
+							<div class="tan tan5"></div>
+							<div class="tan tan6"></div>
+							<div class="tan tan7"></div>
+							<div class="tan tan8"></div>
+						</a>
+						<div class="con-head">
+							<h1 class="con-hd-tp">
+								南山文化旅游区官网(项目)
+							</h1>
+							<div class="con-hd-bt">
+								这一项目是在以前工作中做过的一个项目，在这一项目中我主要负责网页的制作，效果的实现，以及利用phpcms与后台连接。
+							</div>
+						</div>
+					</div>
+					<div class="con">
+						<a href="http://gaothing.github.io/goodnex" class="img">
+							<img src="img/great.jpg" alt="" />
+							<div class="tan tan1"></div>
+							<div class="tan tan2"></div>
+							<div class="tan tan3"></div>
+							<div class="tan tan4"></div>
+							<div class="tan tan5"></div>
+							<div class="tan tan6"></div>
+							<div class="tan tan7"></div>
+							<div class="tan tan8"></div>
+						</a>
+						<div class="con-head">
+							<h1 class="con-hd-tp">
+								WEB单页面宣传网页页(响应式网页)
+							</h1>
+							<div class="con-hd-bt">
+								应用sass对才算是预处理，利用jQuery实现静态页面的效果，以及css3d完成一些动画！
+							</div>
+						</div>
+					</div>
+				</li> 
+				<li class="detail-eve col-lg-4 col-md-4 col-xs-12 col-sm-12">
+					<div class="con">
+						<a href="http://gaothing.github.io/guomei" class="img">
+							<img src="img/jd.jpg" alt="" />
+							<div class="tan tan1"></div>
+							<div class="tan tan2"></div>
+							<div class="tan tan3"></div>
+							<div class="tan tan4"></div>
+							<div class="tan tan5"></div>
+							<div class="tan tan6"></div>
+							<div class="tan tan7"></div>
+							<div class="tan tan8"></div>
+						</a>
+						<div class="con-head">
+							<h1 class="con-hd-tp">
+								WEB单页面宣传网页页
+							</h1>
+							<div class="con-hd-bt">
+								应用HTML，CSS，jQuery对静态页面效果的实现！以前工作前的作品！
+							</div>
+						</div>
+					</div>
+					<div class="con">
+						<a href="http://gaothing.github.io/yintai" class="img">
+							<img src="img/yd.jpg" alt="" />
+							<div class="tan tan1"></div>
+							<div class="tan tan2"></div>
+							<div class="tan tan3"></div>
+							<div class="tan tan4"></div>
+							<div class="tan tan5"></div>
+							<div class="tan tan6"></div>
+							<div class="tan tan7"></div>
+							<div class="tan tan8"></div>
+						</a>
+						<div class="con-head">
+							<h1 class="con-hd-tp">
+								WEB单页面宣传网页页
+							</h1>
+							<div class="con-hd-bt">
+								应用HTML，CSS，javascript对静态页面效果的实现！以前工作前的作品！
+							</div>
+						</div>
+					</div>
+				</li> 		
+			</ul>		
+			<!--2-->
+			<ul class="detail detail-pad">
+				<div class="xiaoyingyong">小应用与微信小程序</div>
+				<div id="LoopDiv">
+					<input id="S_Num" type="hidden" value="8" />
+					<div id="starsIF" class="imageflow">
+	
+						<img class="apply" longdesc="http://gaothing.github.io/todo" src="images/todo.png"  width="280" height="300"  />
+						<img class="apply" longdesc="http://mycontact02.duapp.com" src="images/link.jpg"  width="280" height="300"  />
+						<img class="apply" longdesc="http://mycontact.duapp.com" src="images/call.png"  width="280" height="300"  />
+						<img class="apply" longdesc="http://mycontact.duapp.com" src="images/fang.png"  width="280" height="300" />
+						<img class="apply" longdesc="http://mycontact02.duapp.com" src="images/zhihu.png"  width="280" height="300"  />
+						<img class="apply" longdesc="http://gaothing.github.io/iCloud" src="images/icloud.png"  width="280" height="300"  />
+						<img class="apply" longdesc="http://gaothing.github.io/music" src="images/music.png"  width="280" height="300"  />
+					</div>
+				</div>
+				<div class="xieshi">
+					<a id="gaoyanpeng" href=""></a>
+				</div>
+			</ul>
+		</div>
+		<!--my skill-->
+		<div class="skill floor">
+			<div class="skill-mid container">
+				<h1 class="simple-head">
+				MY  SKILL	
+				</h1>
+				<p>有武器才能武装自己，熟练掌握多门语言才能算是一个优秀的前端人员！以下便是我的武器库，是我工作离不开的伙伴，也是我创造优秀项目和作品的必备技能！不断拓展自己的技能，在前端路上不停！
+				<br></br>
+				Welcome to my space air breathing, the steps of mining move forward, an engineer!
+			</div>
+			<ul class="skill-eve container">
+				<li class="csss col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/angular.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/jq.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/h53.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/sass.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/ps1.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/node.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss csss1 col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/phpcms.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss csss1 col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/bootstrap.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss csss1 col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/ajax.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss csss1 col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/mysql.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss csss1 col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/js.jpg" alt="" />
+					</a>
+				</li>
+				<li class="csss csss1 col-lg-2 col-md-2 col-sm-3 col-xs-3">
+					<a href="" class="dd">
+						<img src="img/weixin.jpg" alt="" />
+					</a>
+				</li>				
+			</ul>
+		</div>
+		<!--about me-->
+		<div class="about floor container">
+			<div class="about-mid container">
+				<h1 class="simple-head">
+					ABOUT ME	
+				</h1>
+				<h3 class="sim-tell">
+				</h3>
+				<ul class="container">
+					<li class="twobag  col-lg-6 col-md-6 col-sm-12 col-xs-12">	
+						<a href="javascript:;" class="tou">
+							<img src="img/team2.jpg" alt="" />
+						</a>
+						<a class="simple simple1" href="">姓名：<span>高艳鹏</span></a>
+						<a class="simple" href="">毕业学校：<span>太原工业学院</span></a>
+						<a class="simple" href="">学历：<span>本科</span></a>
+						<a class="simple" href="">电话：<span>15034164080</span></a>
+						<a class="simple" href="">邮箱：<span>15034164080@163.com</span></a>				
+					</li>
+					<li class="twobag  col-lg-6 col-md-6 col-sm-12 col-xs-12">
+						<p class="mai"><i>关于前端</i>：我认为他的深度是没有尽头的，所以探索是一生的路！</p>
+						<p class="mai1"><i>关于工作</i>：我是一个要求自己有在有限时间内做到最好的态度，也是我一直的习惯！</p>
+						<p class="mai2"><i>关于团队</i>：个人能力以及团队的默契合作都是重要的！</p>
+						<p class="mai3"><i>关于自己</i>：较好的适应能力能让我快速融入一个集体，较强的学习能力让我可以很快上手，随和的性格让我可以更好的与人相处。</p>
+					</li>
+					<li class="my"></li>
+				</ul>
+			</div>
+		</div>
+		<!--<div class="goTop">TOP</div>-->
+	</body>
+</html>

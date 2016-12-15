@@ -1,0 +1,116 @@
+@charset "utf-8";
+/*.myloge.col-sm-12,.myloge.col-xs-12{
+	float:none;
+	
+	text-align: center;
+}
+.menu.col-sm-12,.menu.col-xs-12{
+	float:none;
+	display: none;
+	text-align: center;
+}*/
+.portfolio  .imageflow {
+	overflow: hidden;
+	position: relative;
+	text-align: left;
+	visibility: hidden;
+	width: 100%
+}
+.detail{
+	overflow: hidden;
+}
+.detail .xiaoyingyong{
+	margin-top: 30px;
+	padding: 10px;
+	color: #fff;
+	font-size: 24px;
+	text-align: center;
+	opacity: 0;
+	transform: translateX(500px);
+	
+}
+.detail .xiaoyingyong1{
+	opacity: 1;
+	transform: translateX(0);
+	transition: all 0.6s linear;
+	
+}
+.portfolio  .imageflow img {
+	border: none;
+	position: absolute;
+	top: 0px;
+	visibility: hidden;
+	-ms-interpolation-mode: bicubic
+}
+
+.portfolio  .imageflow p {
+	margin: 0 auto;
+	text-align: center
+}
+
+.portfolio .imageflow .loading {
+	border: 1px solid #ccc;
+	height: 15px;
+	left: 50%;
+	margin-left: -106px;
+	padding: 5px;
+	position: relative;
+	visibility: visible;
+	width: 200px
+}
+
+.portfolio .imageflow .loading_bar {
+	background: #ccc;
+	height: 15px;
+	visibility: visible;
+	width: 1%
+}
+
+.portfolio .imageflow .caption {
+	font-weight: bold;
+	position: relative;
+	text-align: center;
+	z-index: 10000
+}
+
+.portfolio .imageflow .scrollbar {
+	border-bottom: 1px solid #b3b3b3;
+	position: relative;
+	visibility: hidden;
+	z-index: 10001;
+	height: 1px
+}
+
+.portfolio .imageflow .slider {
+	background-image: url(../../Images/Index/slider.png);
+	background-repeat: no-repeat;
+	height: 14px;
+	margin: -6px 0 0 -7px;
+	position: absolute;
+	width: 14px;
+	z-index: 10002
+}
+
+.portfolio .imageflow .images {
+	overflow: hidden;
+	white-space: nowrap
+}
+
+.portfolio .imageflow .button {
+	cursor: pointer;
+	height: 17px;
+	position: relative;
+	width: 17px
+}
+
+.portfolio .imageflow .previous {
+	background: url(../../Images/Index/button_left.png) top left no-repeat;
+	float: left;
+	margin: -7px 0 0 -30px
+}
+
+.portfolio .imageflow .next {
+	background: url(../../Images/Index/button_right.png) top left no-repeat;
+	float: right;
+	margin: -7px -30px 0 30px
+}
